@@ -17,6 +17,8 @@
 # battery_capacity_file:      Path to read current battery charge from.
 # battery_capacity_threshold: Battery threshold for factory reset [0, 100].
 #                             Default 0 (no threshold).
+# embed_recovery: in case the recovery needs to embeded inside
+#                 the regular initramfs
 #
 # Adding device specific files to initrd folder:
 #
@@ -72,6 +74,12 @@ BuildRequires:  e2fsprogs
 BuildRequires:  yamui
 BuildRequires:  openssh-clients
 BuildRequires:  openssh-server
+
+%if 0%{?embed_recovery:1}
+BuildRequires: shpp
+%else
+%define embed_recovery 0
+%endif
 
 # mkbootimg needs python
 BuildRequires:  python
@@ -169,11 +177,13 @@ sed --in-place 's|@DISPLAY_BRIGHTNESS@|%{display_brightness}|' %{_local_initrd_d
 sed --in-place 's|@BATTERY_CAPACITY_FILE@|%{battery_capacity_file}|' %{_local_initrd_dir}/etc/sysconfig/recovery
 sed --in-place 's|@BATTERY_CAPACITY_THRESHOLD@|%{battery_capacity_threshold}|' %{_local_initrd_dir}/etc/sysconfig/recovery
 
+shpp -Dembed_recovery=%{embed_recovery} initrd/jolla-init -o %{_local_initrd_dir}/jolla-init
+
 # Create a hybris-boot.img image from the zImage
 pushd %{_local_initrd_dir}
 ./mksfosinitrd.sh
 popd
-%{mkbootimg_cmd} hybris-boot.img
+%{mkbootimg_cmd} hybris-boot.img %{embed_recovery}
 
 pushd %{_local_initrd_dir}
 ./mksfosinitrd.sh recovery

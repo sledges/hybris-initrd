@@ -34,15 +34,27 @@ ROOTMNTDIR="/rootfs"
 # for where to mount the root.
 MNTSCRIPT="/sbin/root-mount"
 
+mkdir -p /proc
+mount -t proc proc /proc
+
 fail()
 {
 	echo "initrd: Failed" > /dev/kmsg
 	echo "initrd: $1" > /dev/kmsg
+#\\if @embed_recovery@ == 1
+        exec ./recovery-init
+#\\else
 	reboot2 recovery
+#\\endif
 }
 
-mkdir -p /proc
-mount -t proc proc /proc
+#\\if @embed_recovery@ == 1
+
+if ! grep -q skip_initramfs /proc/cmdline  ; then
+    exec ./recovery-init
+fi
+
+#\\endif
 
 mkdir -p /sys
 mount -t sysfs sys /sys
