@@ -51,21 +51,28 @@ chmod 0600 $FIX_FILE_PERMISSIONS
 
 TOOL_LIST="$TOOL_LIST $(cat tools.files 2> /dev/null)"
 
+OLD_DIR=$(pwd)
+TMP_DIR=/tmp/sfosinitrd
+
 if test x"$1" = x"recovery"; then
-	TOOL_LIST="$TOOL_LIST $RECOVERY_FILES $(cat recovery.files 2> /dev/null)"
 	DEF_INIT="recovery-init"
 else
 	# The default init script
 	DEF_INIT="jolla-init"
 fi
 
-# Remove duplicates.
-TOOL_LIST="$(echo $TOOL_LIST | sort | uniq)"
-
 set -e
 
-OLD_DIR=$(pwd)
-TMP_DIR=/tmp/sfosinitrd
+rm -rf "$TMP_DIR"
+mkdir "$TMP_DIR"
+
+if test x"$1" = x"recovery" || test ! x"$2" = x"0" && test ! x"$2" = ""; then 
+    TOOL_LIST="$TOOL_LIST $RECOVERY_FILES $(cat recovery.files 2> /dev/null) recovery-init"
+    cp "$OLD_DIR"/recovery-init "$TMP_DIR"/.
+fi
+
+# Remove duplicates.
+TOOL_LIST="$(echo $TOOL_LIST | sort | uniq)"
 
 check_files()
 {
@@ -82,8 +89,6 @@ check_files()
 
 check_files "$TOOL_LIST" || exit 1
 
-rm -rf "$TMP_DIR"
-mkdir "$TMP_DIR"
 cd "$TMP_DIR"
 
 # Copy local files to be added to initrd. If you add more, add also to TOOL_LIST.
@@ -93,7 +98,7 @@ mkdir -p etc
 cp -a "$OLD_DIR"/etc/sysconfig etc
 
 # Copy recovery files
-if test x"$1" = x"recovery"; then
+if test x"$1" = x"recovery" || test ! x"$2" = x"0" && test ! x"$2" = ""; then
 	cp -a "$OLD_DIR"/usr/ "$OLD_DIR"/etc/ -t ./
 fi
 
