@@ -41,20 +41,16 @@ fail()
 {
 	echo "initrd: Failed" > /dev/kmsg
 	echo "initrd: $1" > /dev/kmsg
-#\\if @embed_recovery@ == 1
-        exec ./recovery-init
-#\\else
-	reboot2 recovery
-#\\endif
+	if [ @EMBED_RECOVERY@ == 1 ]; then
+		exec ./recovery-init
+	else
+		reboot2 recovery
+	fi
 }
 
-#\\if @embed_recovery@ == 1
-
-if ! grep -q skip_initramfs /proc/cmdline  ; then
+if [ @EMBED_RECOVERY@ == 1 ] && ! grep -q skip_initramfs /proc/cmdline; then
     exec ./recovery-init
 fi
-
-#\\endif
 
 mkdir -p /sys
 mount -t sysfs sys /sys

@@ -75,12 +75,6 @@ BuildRequires:  yamui
 BuildRequires:  openssh-clients
 BuildRequires:  openssh-server
 
-%if 0%{?embed_recovery:1}
-BuildRequires: shpp
-%else
-%define embed_recovery 0
-%endif
-
 # mkbootimg needs python
 BuildRequires:  python
 
@@ -179,13 +173,14 @@ sed --in-place 's|@DISPLAY_BRIGHTNESS@|%{display_brightness}|' %{_local_initrd_d
 sed --in-place 's|@BATTERY_CAPACITY_FILE@|%{battery_capacity_file}|' %{_local_initrd_dir}/etc/sysconfig/recovery
 sed --in-place 's|@BATTERY_CAPACITY_THRESHOLD@|%{battery_capacity_threshold}|' %{_local_initrd_dir}/etc/sysconfig/recovery
 
-shpp -Dembed_recovery=%{embed_recovery} initrd/jolla-init -o %{_local_initrd_dir}/jolla-init
+sed "s/@EMBED_RECOVERY@/%{?embed_recovery}%{!?embed_recovery:0}/g" -i %{_local_initrd_dir}/jolla-init
 
 # Create a hybris-boot.img image from the zImage
 pushd %{_local_initrd_dir}
-./mksfosinitrd.sh %{embed_recovery}
+./mksfosinitrd.sh %{?embed_recovery}%{!?embed_recovery:0}
 popd
-%{mkbootimg_cmd} hybris-boot.img 
+%{mkbootimg_cmd} hybris-boot.img
+
 %if 0%{!?embed_recovery:1}
 pushd %{_local_initrd_dir}
 ./mksfosinitrd.sh recovery

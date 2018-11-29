@@ -98,7 +98,7 @@ mkdir -p etc
 cp -a "$OLD_DIR"/etc/sysconfig etc
 
 # Copy recovery files
-if test x"$1" = x"recovery" || test ! x"$2" = x"0" && test ! x"$2" = ""; then
+if test x"$1" = x"recovery" || test ! x"$1" = x"0" && test ! x"$1" = ""; then
 	cp -a "$OLD_DIR"/usr/ "$OLD_DIR"/etc/ -t ./
 fi
 
